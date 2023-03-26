@@ -11,6 +11,9 @@ namespace ChatWS.Models.Requests
         public int EmisorId { get; set; }
 
         [Required]
+        public int DestinataryId { get; set; }
+
+        [Required]
         public string Message { get; set; }
     }
 }

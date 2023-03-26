@@ -1,31 +1,37 @@
-﻿using Amazon.Runtime.Internal;
-using ChatWS.Models;
+﻿using ChatWS.Models;
 using ChatWS.Models.Exceptions;
 using ChatWS.Models.Requests;
+using ChatWS.Models.Responses;
 using DB;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using MongoDB.Driver;
+using System.Runtime.Serialization;
 
 namespace ChatWS.Services
 {
     public class UserService
     {
-        private readonly IMongoCollection<User> _userCollection;
+        private readonly AppDbContext _db;
 
-        public UserService(IDbConfig dbConfig)
+        public UserService(AppDbContext context)
         {
-            var client = new MongoClient(dbConfig.Server);
-            var database = client.GetDatabase(dbConfig.Database);
-            _userCollection = database.GetCollection<User>("User");
+            _db = context;
         }
 
-        public List<User> GetUsers(string name)
+        public List<SearchUserResponse> GetUsers(string name)
         {
-            var users = _userCollection.Find(user => user.Name == name).ToList();
+            var users = _db.Users.Where(user => user.Name.Contains(name))
+                .Select(user => new SearchUserResponse
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Picture = user.Picture,
+                })
+                .ToList();
 
             if (users.IsNullOrEmpty())
             {
-                throw new NotExistException("User not exists");
+                throw new NotExistException("User not exist");
             }
             else
             {
@@ -33,18 +39,20 @@ namespace ChatWS.Services
             }
         }
 
-        public void AddContact(AddContactRequest request)
+        public async Task AddContact(AddContactRequest request)
         {
-            var user = _userCollection.Find(user => user.Id == request.UserId).FirstOrDefault();
-            var contact = _userCollection.Find(user => user.Id == request.ContactId).FirstOrDefault();
-            
+            var user = _db.Users.Where(user => user.Id == request.UserId).FirstOrDefault();
+            var contact = _db.Users.Where(user => user.Id == request.ContactId).FirstOrDefault();
             if (user != null && contact != null)
             {
-                user.Contacts.Add(contact.Id);
-                _userCollection.ReplaceOne(user => user.Id == request.UserId, user);
+                user.Contacts.Add(contact);
+                await _db.SaveChangesAsync();
+            }
+            else
+            {
+                throw new NotExistException("User not exist");
             }
 
-            throw new NotExistException("User or contact not exist");
         }
     }
 }

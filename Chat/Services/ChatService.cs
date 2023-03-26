@@ -1,60 +1,71 @@
 ﻿using DB;
-using MongoDB.Driver;
 using ChatWS.Models;
-using MongoDB.Bson;
 using ChatWS.Models.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using ChatWS.Models.Requests;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
+using ChatWS.Models.Responses;
+using ChatWS.Hubs;
 
 namespace ChatWS.Services
 {
     public class ChatService
     {
-        private readonly IMongoCollection<Chat> _chatCollection;
-        private readonly IMongoCollection<User> _userCollection;
-        private readonly IMongoCollection<Message> _messageCollection;
+        private readonly AppDbContext _db;
+        private readonly ChatHub _hub;
 
-        public ChatService(IDbConfig dbConfig)
+        public ChatService(AppDbContext DbContext, ChatHub hub)
         {
-            var client = new MongoClient(dbConfig.Server);
-            var database = client.GetDatabase(dbConfig.Database);
-            _chatCollection = database.GetCollection<Chat>("Chat");
-            _messageCollection = database.GetCollection<Message>("Message");
-            _userCollection = database.GetCollection<User>("User");
+            _db = DbContext;
+            _hub = hub;
         }
 
-        public string Create([FromBody] CreateChatRequest request)
+        public async Task<int> Create(CreateChatRequest request)
         {
-            Chat chat = new Chat()
+
+            Chat chat = new Chat();
+            var result = _db.Chats.Add(chat);
+            foreach (var user in request.UsersId)
             {
-                Users = request.UsersId
-            };
-            _chatCollection.InsertOne(chat);
-            foreach (var id in request.UsersId)
-            {
-                var filterDef = Builders<User>.Filter.Eq("Id", id);
-                var user = _userCollection.Find(filterDef).FirstOrDefault();
-                user.Chats.Add(chat.Id);
-                _userCollection.ReplaceOne(filterDef, user);
+                var getUser = _db.Users.Where(x => x.Id == user).FirstOrDefault();
+                getUser?.Chats.Add(result.Entity);
             }
-            return chat.Id;
+            await _db.SaveChangesAsync();
+            await _hub.AddChat(request.UsersId);
+            return result.Entity.Id;
         }
 
-        public Chat GetChat(string id)
+        public List<ChatAccess> GetUserChats(int userId)
         {
 
-            var chat = _chatCollection
-                .Aggregate()
-                .Match(chat => chat.Id == id)
-                .Lookup<Chat, Message, Chat>(_messageCollection, chat => chat.Messages, message => message.Id, x => x.Messages)
-                .FirstOrDefault();
+            var chats = _db.Chats
+                .Include(x => x.Users)
+                .Where(chat => chat.Users.Select(user => user.Id).Contains(userId))
+                .Include(x => x.Messages.OrderBy(x => x.CreatedTime))
+                .Select(chat => new ChatAccess
+                {
+                    Id= chat.Id,
+                    LastMessage = chat.Messages.FirstOrDefault(),
+                    Destinatary = chat.Users
+                    .Where(user => user.Id != userId)
+                    .Select(x => new Destinatary{
+                       Id = x.Id,
+                       Name = x.Name,
+                       Picture = x.Picture
+                    })
+                    .First()
+                })
+                .ToList();
 
-            if (chat != null)
+            if (chats is null)
             {
-                return chat;
+                throw new NotExistException("Not exist chats");
             }
-
-            throw new NotExistException("Chat not found");
+            else
+            {
+                return chats;
+            }
         }
     }
 }

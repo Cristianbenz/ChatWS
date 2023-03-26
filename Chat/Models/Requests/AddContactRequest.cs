@@ -5,8 +5,8 @@ namespace ChatWS.Models.Requests
     public class AddContactRequest
     {
         [Required]
-        public string UserId { get; set; }
+        public int UserId { get; set; }
         [Required]
-        public string ContactId { get; set; }
+        public int ContactId { get; set; }
     }
 }

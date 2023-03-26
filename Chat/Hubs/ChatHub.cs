@@ -1,31 +1,44 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using ChatWS.Models;
+using ChatWS.Models.Requests;
+using DB;
+using Microsoft.AspNetCore.SignalR;
 
 namespace ChatWS.Hubs
 {
     public class ChatHub : Hub
     {
-        private Dictionary<string, string> activeClients = new Dictionary<string, string>();
-        public Task OnConnectedAsync(string userId)
+        private Dictionary<int, string> activeClients = new Dictionary<int, string>();
+        public void AddUser(int userId)
         {
-            activeClients.Add(userId, Context.ConnectionId);
-
-            return base.OnConnectedAsync();
+            if (activeClients.ContainsKey(userId) == false)
+            {
+                activeClients.Add(userId, Context.ConnectionId);
+            } else
+            {
+                activeClients.Remove(userId);
+                activeClients.Add(userId, Context.ConnectionId);
+            }
         }
 
-        public Task OnDisconnectedAsync(Exception? exception, string userId)
+        public async Task AddChat(List<int> users)
         {
-            activeClients.Remove(userId);
-            return base.OnDisconnectedAsync(exception);
+            if (activeClients.ContainsKey(users[0]) == true && activeClients.ContainsKey(users[1]) == true)
+            {
+                await Clients.Clients(new List<string>
+                {
+                    activeClients[users[0]],
+                    activeClients[users[1]]
+                })
+                 .SendAsync("chatRequest");
+            }
         }
 
-        public async Task SendMessage(string chat, string user, string message)
+        public async Task SendMessage(int destinataryId, Message message)
         {
-            await Clients.Group(chat).SendAsync("sendMessage", user, message);
-        }
-
-        public async Task NewMessage(string chat)
-        {
-            await Clients.Group(chat).SendAsync("newNotification", 1);
+            if(activeClients.ContainsKey(destinataryId) == true)
+            {
+                await Clients.Client(activeClients[destinataryId]).SendAsync("receiveMessage", message);
+            }
         }
     }
 }

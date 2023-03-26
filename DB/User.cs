@@ -1,42 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Bson;
 
 namespace DB
 {
+    [Table("users")]
     public class User
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        [Key]
+        [Column("id")]
+        public int Id { get; set; }
 
-        [BsonRequired]
-        [BsonElement("picture")]
+        [Column("picture")]
         public string Picture { get; set; }
 
-        [BsonRequired]
-        [BsonElement("name")]
+        [Required]
+        [Column("name")]
         public string Name { get; set; }
 
-        [BsonRequired]
-        [BsonElement("email")]
+        [Required]
+        [Column("email")]
         public string Email { get; set; }
 
-        [BsonRequired]
-        [BsonElement("password")]
+        [Required]
+        [Column("password")]
         public string Password { get; set; }
 
-        [BsonElement("contacts")]
-        public List<string> Contacts { get; set; } = new List<string>();
 
-        [BsonElement("chats")]
-        public List<string> Chats { get; set; } = new List<string>();
+        public virtual ICollection<User> Contacts { get; set; } = new List<User>();
 
-        [BsonElement("messages")]
-        public List<string> Messages { get; set; } = new List<string>();
+        public virtual ICollection<Chat> Chats { get; set; } = new List<Chat>();
     }
 }

@@ -1,6 +1,6 @@
-﻿using ChatWS.Models;
-using ChatWS.Models.Exceptions;
+﻿using ChatWS.Models.Exceptions;
 using ChatWS.Models.Requests;
+using ChatWS.Models.Responses;
 using ChatWS.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,12 +17,12 @@ namespace ChatWS.Controllers
         }
 
         [HttpPost]
-        public IActionResult SignUp([FromBody] SignUpRequest request)
+        public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
         {
             Response OResponse = new Response();
             try
             {
-                string id = _service.Add(request);
+                int id = await _service.Add(request);
                 OResponse.Data = new { id };
             }
             catch (AlreadyExistsException ex)
@@ -52,7 +52,8 @@ namespace ChatWS.Controllers
             Response OResponse = new Response();
             try
             {
-                _service.SignIn(request);
+                var result = _service.SignIn(request);
+                OResponse.Data = result;
             }
             catch (NotExistException ex)
             {

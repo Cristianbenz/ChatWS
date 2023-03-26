@@ -1,25 +1,20 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Bson;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace DB
 {
     public class Chat
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        [Key]
+        [Column("id")]
+        public int Id { get; set; }
 
-        [BsonRequired]
-        [BsonElement("users")]
-        public List<string> Users { get; set; } = new List<string>();
-
-        [BsonRequired]
-        [BsonElement("messages")]
-        public List<string> Messages { get; set; } = new List<string>();
+        public virtual ICollection<User> Users { get; set; } = new List<User>();
+        public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
     }
 }

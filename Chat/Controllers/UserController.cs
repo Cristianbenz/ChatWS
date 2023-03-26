@@ -1,7 +1,9 @@
 ﻿using ChatWS.Models;
 using ChatWS.Models.Exceptions;
 using ChatWS.Models.Requests;
+using ChatWS.Models.Responses;
 using ChatWS.Services;
+using DB;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,13 +19,14 @@ namespace ChatWS.Controllers
             _userService = service;
         }
 
-        [HttpGet("{name}")]
+        [HttpGet]
         public IActionResult GetByName(string name)
         {
             Response response = new Response();
             try
             {
                 var users = _userService.GetUsers(name);
+                response.Success = 1;
                 response.Data = users;
                 return Ok(response);
             }
@@ -32,16 +35,21 @@ namespace ChatWS.Controllers
                 response.Message = ex.Message;
                 return NotFound(response);
             }
+            catch(Exception ex)
+            {
+                response.Message = ex.Message;
+                return StatusCode(500, response);
+            }
             
         }
 
         [HttpPut]
-        public IActionResult AddContact(AddContactRequest request)
+        public async Task<IActionResult> AddContact(AddContactRequest request)
         {
             Response response = new Response();
             try
             {
-                _userService.AddContact(request);
+                await _userService.AddContact(request);
                 response.Success = 1;
                 return Ok(response);
             }

@@ -2,6 +2,6 @@
 {
     public class CreateChatRequest
     {
-        public List<string> UsersId { get; set; }
+        public List<int> UsersId { get; set; }
     }
 }

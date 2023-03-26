@@ -1,5 +1,4 @@
-﻿using MongoDB.Driver;
-using DB;
+﻿using DB;
 using Microsoft.AspNetCore.Mvc;
 using ChatWS.Models.Exceptions;
 using Microsoft.IdentityModel.Tokens;
@@ -8,24 +7,24 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using ChatWS.Models.Requests;
 using ChatWS.Models;
+using ChatWS.Models.Responses;
 
 namespace ChatWS.Services
 {
     public class AuthService
     {
-        private readonly IJwtConfig _jwtConfig;
-        private readonly IMongoCollection<User> _users;
-        public AuthService(IJwtConfig authConfig, IDbConfig dbConfig)
+        private AppDbContext _db;
+        private IJwtConfig _jwtConfig;
+
+        public AuthService(AppDbContext dbContext, IJwtConfig config)
         {
-            var client = new MongoClient(dbConfig.Server);
-            var database = client.GetDatabase(dbConfig.Database);
-            _users = database.GetCollection<User>("User");
-            _jwtConfig = authConfig;
+            _db = dbContext;
+            _jwtConfig = config;
         }
 
-        public string Add(SignUpRequest requestInfo)
+        public async Task<int> Add(SignUpRequest requestInfo)
         {
-            var user = _users.Find(user => user.Email == requestInfo.Email).FirstOrDefault();
+            var user = _db.Users.Where(user => user.Email == requestInfo.Email).FirstOrDefault();
 
             if (user == null)
             {
@@ -36,8 +35,9 @@ namespace ChatWS.Services
                     Picture = requestInfo.Picture,
                     Password = Encrypt.GetSHA256(requestInfo.Password),
                 };
-                _users.InsertOne(newUser);
-                return newUser.Id;
+                var result = _db.Users.Add(newUser);
+                await _db.SaveChangesAsync();
+                return result.Entity.Id;
             }
             else
             {
@@ -45,13 +45,17 @@ namespace ChatWS.Services
             }
 
         }
-        public void SignIn(SignInRequest requestInfo)
+        public SignInResponse SignIn(SignInRequest requestInfo)
         {
-            var user = _users.Find(user => user.Email == requestInfo.Email && user.Password == Encrypt.GetSHA256(requestInfo.Password)).FirstOrDefault();
+            var user = _db.Users.Where(user => user.Email == requestInfo.Email && user.Password == Encrypt.GetSHA256(requestInfo.Password)).FirstOrDefault();
 
             if (user != null)
             {
-                getToken(user);
+                SignInResponse response = new SignInResponse();
+                string result = getToken(user);
+                response.Id = user.Id;
+                response.Token = result;
+                return response;
             }
 
             throw new NotExistException("User not exist");

@@ -1,4 +1,4 @@
-﻿namespace ChatWS.Models
+﻿namespace ChatWS.Models.Responses
 {
     public class Response
     {
