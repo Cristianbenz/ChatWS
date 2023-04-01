@@ -6,7 +6,7 @@ RUN dotnet restore ChatWS.csproj
 
 FROM base as publish 
 COPY . .
-RUN dotnet publish -c Release -o /app
+RUN dotnet publish Chat.sln -c Release -o /app
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 as runtime
 WORKDIR /app
