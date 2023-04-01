@@ -1,9 +1,11 @@
+using ChatWS.Helpers;
 using ChatWS.Hubs;
 using ChatWS.Models;
 using ChatWS.Services;
 using DB;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -29,7 +31,6 @@ builder.Services.AddCors(config =>
 });
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -45,7 +46,7 @@ builder.Services.AddSignalR();
 // Add DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("SqlConnect"));
+    options.UseNpgsql(ConnectionStringHelper.GetConnectionString(builder.Configuration));
 });
 
 // Add JwtBearer Authentication
@@ -88,6 +89,9 @@ builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<UserService>();
 
 var app = builder.Build();
+
+var scope = app.Services.CreateScope();
+await MigrationHelper.MigrateDataAsync(scope.ServiceProvider);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
