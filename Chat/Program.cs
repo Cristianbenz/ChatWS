@@ -24,7 +24,7 @@ builder.Services.AddCors(config =>
         {
             builder.AllowAnyHeader();
             builder.AllowAnyMethod();
-            builder.WithOrigins("http://localhost:4200");
+            builder.WithOrigins("http://localhost:4200", "https://cbenzchat.vercel.app");
             builder.AllowCredentials();
         }
         );
