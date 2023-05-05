@@ -91,7 +91,7 @@ builder.Services.AddScoped<UserService>();
 var app = builder.Build();
 
 var scope = app.Services.CreateScope();
-await MigrationHelper.MigrateDataAsync(scope.ServiceProvider);
+MigrationHelper.MigrateDataAsync(scope.ServiceProvider);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
