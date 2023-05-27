@@ -87,6 +87,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MessagesService>();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ImageService>();
 
 var app = builder.Build();
 

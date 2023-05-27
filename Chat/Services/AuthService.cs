@@ -54,6 +54,8 @@ namespace ChatWS.Services
                 SignInResponse response = new SignInResponse();
                 string result = getToken(user);
                 response.Id = user.Id;
+                response.Avatar = user.Picture;
+                response.Name = user.Name;
                 response.Token = result;
                 return response;
             }
