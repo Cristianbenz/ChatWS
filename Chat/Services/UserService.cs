@@ -12,10 +12,12 @@ namespace ChatWS.Services
     public class UserService
     {
         private readonly AppDbContext _db;
+        private readonly ImageService _imageService;
 
-        public UserService(AppDbContext context)
+        public UserService(AppDbContext context, ImageService imageSerivce)
         {
             _db = context;
+            _imageService = imageSerivce;
         }
 
         public List<SearchUserResponse> GetUsers(string name)
@@ -25,7 +27,7 @@ namespace ChatWS.Services
                 {
                     Id = user.Id,
                     Name = user.Name,
-                    Picture = user.Picture,
+                    Picture = _imageService.Get(user.Id)
                 })
                 .ToList();
 

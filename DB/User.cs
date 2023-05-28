@@ -15,9 +15,6 @@ namespace DB
         [Column("id")]
         public int Id { get; set; }
 
-        [Column("picture")]
-        public string Picture { get; set; }
-
         [Required]
         [Column("name")]
         public string Name { get; set; }
