@@ -15,11 +15,13 @@ namespace ChatWS.Services
     {
         private AppDbContext _db;
         private IJwtConfig _jwtConfig;
+        private ImageService _imageService;
 
-        public AuthService(AppDbContext dbContext, IJwtConfig config)
+        public AuthService(AppDbContext dbContext, IJwtConfig config, ImageService imageService)
         {
             _db = dbContext;
             _jwtConfig = config;
+            _imageService = imageService;
         }
 
         public async Task<int> Add(SignUpRequest requestInfo)
@@ -32,7 +34,6 @@ namespace ChatWS.Services
                 {
                     Email = requestInfo.Email,
                     Name = requestInfo.Name,
-                    Picture = requestInfo.Picture,
                     Password = Encrypt.GetSHA256(requestInfo.Password),
                 };
                 var result = _db.Users.Add(newUser);
@@ -54,7 +55,7 @@ namespace ChatWS.Services
                 SignInResponse response = new SignInResponse();
                 string result = getToken(user);
                 response.Id = user.Id;
-                response.Avatar = user.Picture;
+                response.Avatar = this._imageService.Get(user.Id);
                 response.Name = user.Name;
                 response.Token = result;
                 return response;

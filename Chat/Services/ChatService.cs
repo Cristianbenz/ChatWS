@@ -13,12 +13,14 @@ namespace ChatWS.Services
     public class ChatService
     {
         private readonly AppDbContext _db;
+        private readonly ImageService _imageService;
         private readonly ChatHub _hub;
 
-        public ChatService(AppDbContext DbContext, ChatHub hub)
+        public ChatService(AppDbContext DbContext, ChatHub hub, ImageService imageService)
         {
             _db = DbContext;
             _hub = hub;
+            _imageService = imageService;
         }
 
         public async Task<int> Create(CreateChatRequest request)
@@ -52,7 +54,7 @@ namespace ChatWS.Services
                     .Select(x => new Destinatary{
                        Id = x.Id,
                        Name = x.Name,
-                       Picture = x.Picture
+                       Picture = _imageService.Get(x.Id)
                     })
                     .First()
                 })

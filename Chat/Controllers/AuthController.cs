@@ -31,7 +31,7 @@ namespace ChatWS.Controllers
                 OResponse.Message = ex.Message;
                 return BadRequest(OResponse);
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
                 OResponse.Message = "User information is missing";
                 return BadRequest(OResponse);
@@ -61,7 +61,7 @@ namespace ChatWS.Controllers
                 OResponse.Message = ex.Message;
                 return BadRequest(OResponse);
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
                 OResponse.Message = "User information is missing";
                 return BadRequest(OResponse);

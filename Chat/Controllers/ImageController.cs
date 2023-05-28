@@ -16,12 +16,12 @@ namespace ChatWS.Controllers
         }
 
         [HttpPost("{userId}")]
-        public async Task<IActionResult> UploadAvatar([FromQuery] int userId, [FromForm] IFormFile file)
+        public async Task<IActionResult> UploadAvatar(int userId, [FromForm] IFormCollection file)
         {
             var response = new Response();
             try
             {
-                await _imageService.Add(userId, file);
+                await _imageService.Add(userId, file.Files[0]);
                 response.Success = 1;
                 response.Message = "Image uploaded successfully";
                 return Ok(response);
