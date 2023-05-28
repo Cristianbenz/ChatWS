@@ -29,7 +29,7 @@ namespace ChatWS.Services
         public string Get(int userId)
         {
             var filePath = this.GetFilePath(userId);
-            string hostUrl = "https://cbenzchat.vercel.app";
+            string hostUrl = "https://cbnezchatws.up.railway.app";
             string avatarPath = filePath + "\\avatar.jpg";
 
             if (!System.IO.File.Exists(avatarPath))
